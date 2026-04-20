@@ -1,37 +1,37 @@
-#ifndef TURING_MACHINE_H
-#define TURING_MACHINE_H
+#ifndef TURINGMACHINE_H
+#define TURINGMACHINE_H
 
 #include <QWidget>
+#include <QLineEdit>
 #include <QPushButton>
+#include <QLabel>
+#include <QTableWidget>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
 
-// Наш главный класс наследуется от QWidget
 class TuringMachine : public QWidget {
-    Q_OBJECT // Обязательный макрос для работы сигналов и слотов
+    Q_OBJECT
 
 public:
-    explicit TuringMachine(QWidget *parent = nullptr);
+    TuringMachine(QWidget *parent = nullptr);
 
 private slots:
-    // Это слоты — функции, которые будут выполняться при нажатии кнопок
-    void onSetAlphabetsClicked();
-    void onSetStringClicked();
-    void onRunClicked();
-    void onStopClicked();
-    void onStepClicked();
-    void onResetClicked();
-    void onSpeedUpClicked();
-    void onSlowDownClicked();
+    void onSetAlphabets(); // Логика перехода к Окну 2
+    void onReset();        // Возврат к Окну 1
 
 private:
-    // Объявляем сами кнопки
-    QPushButton *btnSetAlphabets;
-    QPushButton *btnSetString;
-    QPushButton *btnRun;
-    QPushButton *btnStop;
-    QPushButton *btnStep;
-    QPushButton *btnReset;
-    QPushButton *btnSpeedUp;
-    QPushButton *btnSlowDown;
+    // Элементы Окна 1
+    QWidget *setupWidget;
+    QLineEdit *lineAlphabet;
+    QLineEdit *extraAlphabet;
+
+    // Элементы Окна 2
+    QWidget *mainWidget;
+    QLineEdit *tapeInput;
+    QTableWidget *programTable;
+
+    // Слой для переключения между окнами
+    QVBoxLayout *globalLayout;
 };
 
-#endif // TURING_MACHINE_H
+#endif
