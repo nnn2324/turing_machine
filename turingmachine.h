@@ -1,37 +1,45 @@
 #ifndef TURINGMACHINE_H
 #define TURINGMACHINE_H
 
-#include <QWidget>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QLabel>
-#include <QTableWidget>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
+#include <QMainWindow>
+#include <QTimer>
+#include <QPropertyAnimation>
+#include <QString>
 
-class TuringMachine : public QWidget {
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
+
+class TuringMachine : public QMainWindow {
     Q_OBJECT
 
 public:
     TuringMachine(QWidget *parent = nullptr);
+    ~TuringMachine();
 
 private slots:
-    void onSetAlphabets(); // Логика перехода к Окну 2
-    void onReset();        // Возврат к Окну 1
+    void on_btn_setAlphabets_clicked();
+    void on_btn_setString_clicked();
+    void on_btn_start_clicked();
+    void on_btn_stop_clicked();
+    void on_btn_speedUp_clicked();
+    void on_btn_speedDown_clicked();
+    void on_btn_addState_clicked();
+    void on_btn_removeState_clicked();
+    void machineStep();
 
 private:
-    // Элементы Окна 1
-    QWidget *setupWidget;
-    QLineEdit *lineAlphabet;
-    QLineEdit *extraAlphabet;
+    Ui::MainWindow *ui;
+    QTimer *timer;
+    QPropertyAnimation *anim;
 
-    // Элементы Окна 2
-    QWidget *mainWidget;
-    QLineEdit *tapeInput;
-    QTableWidget *programTable;
+    // Те самые переменные, которых не хватало:
+    QString baseAlphabet;
+    QString extraAlphabet;
+    int currentState;
+    int headPos;
+    int speed;
 
-    // Слой для переключения между окнами
-    QVBoxLayout *globalLayout;
+    void moveCarriage(int pos);
 };
-
 #endif

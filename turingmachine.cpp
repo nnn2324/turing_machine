@@ -7,14 +7,15 @@ TuringMachine::TuringMachine(QWidget *parent) : QMainWindow(parent), ui(new Ui::
     ui->setupUi(this);
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &TuringMachine::machineStep);
-    anim = new QPropertyAnimation(this, "pos");
-    speed = 800; // "Скорость человека" [cite: 6]
+
+    anim = new QPropertyAnimation(this); // Анимация для каретки
+    speed = 800; // Начальная скорость человека [cite: 6]
     ui->stackedWidget->setCurrentIndex(0);
 }
 
 TuringMachine::~TuringMachine() { delete ui; }
 
-// --- НАСТРОЙКА АЛФАВИТОВ ---
+// --- 1. Настройка алфавитов и таблицы программ ---
 void TuringMachine::on_btn_setAlphabets_clicked() {
     baseAlphabet = ui->lineEdit_alphaBase->text();
     extraAlphabet = ui->lineEdit_alphaExtra->text();
@@ -25,82 +26,59 @@ void TuringMachine::on_btn_setAlphabets_clicked() {
     for(QChar c : full) labels << QString(c);
     ui->tableWidget_program->setHorizontalHeaderLabels(labels);
 
-    // Красивое растягивание таблицы
+    // Красивая таблица: растягиваем колонки на всё окно [cite: 24]
     ui->tableWidget_program->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableWidget_program->setRowCount(1);
     ui->tableWidget_program->setVerticalHeaderLabels({"q0"});
 
-    ui->stackedWidget->setCurrentIndex(1);
+    ui->stackedWidget->setCurrentIndex(1); // Переход к машине [cite: 22]
 }
 
-// --- ЗАДАНИЕ СТРОКИ [cite: 34] ---
+// --- 2. Задание строки и проверка алфавита ---
 void TuringMachine::on_btn_setString_clicked() {
     QString word = ui->lineEdit_inputWord->text();
 
-    // Проверка: символы только из алфавита строки [cite: 89]
+    // Проверка: только символы из алфавита строки [cite: 36, 89]
     for(QChar c : word) {
         if(!baseAlphabet.contains(c)) {
-            QMessageBox::critical(this, "Ошибка", "Символ '" + QString(c) + "' не входит в алфавит строки!");
+            QMessageBox::critical(this, "Ошибка", "Символ '" + QString(c) + "' запрещен!");
             return;
         }
     }
 
-    ui->tableWidget_tape->setColumnCount(50); // Запас ленты
-    ui->tableWidget_tape->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    ui->tableWidget_tape->horizontalHeader()->setDefaultSectionSize(40);
+    ui->tableWidget_tape->setColumnCount(50);
+    ui->tableWidget_tape->horizontalHeader()->setDefaultSectionSize(40); // Квадратные ячейки
 
     for(int i=0; i<50; i++) ui->tableWidget_tape->setItem(0, i, new QTableWidgetItem("Λ"));
 
-    // Помещаем строку на ленту (начинаем с 1-й ячейки для удобства)
-    headPos = 5;
+    headPos = 5; // Ставим строку чуть отступив от края [cite: 40]
     for(int i=0; i<word.length(); i++) {
         ui->tableWidget_tape->item(0, headPos + i)->setText(QString(word[i]));
     }
 
-    moveCarriage(headPos); // Каретка под первый символ
+    moveCarriage(headPos);
 }
 
-// --- ПЛАВНАЯ КАРЕТКА  ---
+// --- 3. Плавная визуализация каретки ---
 void TuringMachine::moveCarriage(int pos) {
-    // Получаем координаты ячейки относительно таблицы
+    // Получаем координаты ячейки
     QRect r = ui->tableWidget_tape->visualRect(ui->tableWidget_tape->model()->index(0, pos));
 
-    // Координаты внутри окна (с учетом расположения таблицы)
+    // Центрируем каретку ▲ под ячейкой [cite: 93]
     int targetX = ui->tableWidget_tape->x() + r.x() + (r.width()/2) - (ui->label_carriage->width()/2);
-    int targetY = ui->tableWidget_tape->y() + ui->tableWidget_tape->height() + 5;
+    int targetY = ui->tableWidget_tape->y() + ui->tableWidget_tape->height() + 2;
 
     anim->setTargetObject(ui->label_carriage);
-    anim->setDuration(speed * 0.7); // Анимация чуть быстрее такта
-    anim->setStartValue(ui->label_carriage->pos());
+    anim->setPropertyName("pos");
+    anim->setDuration(speed * 0.8); // Анимация чуть быстрее такта
     anim->setEndValue(QPoint(targetX, targetY));
     anim->start();
 
-    // Автопрокрутка ленты, если каретка уходит за край [cite: 94]
+    // Если каретка уходит за экран, двигаем ленту [cite: 94]
     ui->tableWidget_tape->scrollTo(ui->tableWidget_tape->model()->index(0, pos));
 }
 
-// --- ЗАПУСК И ПРОВЕРКИ ---
-void TuringMachine::on_btn_start_clicked() {
-    // Проверка на наличие хотя бы одного символа остановки '!'
-    bool hasHalt = false;
-    for(int r=0; r<ui->tableWidget_program->rowCount(); r++) {
-        for(int c=0; c<ui->tableWidget_program->columnCount(); c++) {
-            QTableWidgetItem *it = ui->tableWidget_program->item(r, c);
-            if(it && it->text().contains("!")) hasHalt = true;
-        }
-    }
-
-    if(!hasHalt) {
-        QMessageBox::warning(this, "Ошибка", "В таблице нет ни одного состояния остановки (!)");
-        return;
-    }
-
-    currentState = 0;
-    ui->tableWidget_program->setEnabled(false); // Блокировка при запуске [cite: 39]
-    timer->start(speed);
-}
-
-// --- ШАГ МАШИНЫ ---
+// --- 4. Логика шага и проверка на '!' ---
 void TuringMachine::machineStep() {
     QTableWidgetItem *tapeItem = ui->tableWidget_tape->item(0, headPos);
     QString curSym = (tapeItem) ? tapeItem->text() : "Λ";
@@ -111,38 +89,46 @@ void TuringMachine::machineStep() {
 
     QTableWidgetItem *cmd = ui->tableWidget_program->item(currentState, col);
 
-    // Если ячейка пуста или содержит '!', останавливаемся
+    // Если пусто или есть знак '!' — стоп
     if(!cmd || cmd->text().isEmpty() || cmd->text().contains("!")) {
         on_btn_stop_clicked();
-        QMessageBox::information(this, "Стоп", "Машина завершила работу.");
+        QMessageBox::information(this, "Готово", "Машина остановилась.");
         return;
     }
 
-    // Подсветка текущего состояния [cite: 103]
-    ui->tableWidget_program->selectRow(currentState);
+    ui->tableWidget_program->selectRow(currentState); // Подсветка состояния
 
     QStringList p = cmd->text().split("."); // Формат: Символ.Направление.Состояние
     if(p.size() < 3) return;
 
-    // 1. Запись символа (проверка алфавита )
+    // Запись нового символа (проверка алфавита) [cite: 90]
     QString newSym = p[0];
-    if(!baseAlphabet.contains(newSym) && !extraAlphabet.contains(newSym) && newSym != "Λ") {
-        timer->stop();
-        QMessageBox::critical(this, "Ошибка", "Символ '" + newSym + "' не входит в алфавиты!");
-        return;
+    if(baseAlphabet.contains(newSym) || extraAlphabet.contains(newSym) || newSym == "Λ") {
+        ui->tableWidget_tape->item(0, headPos)->setText(newSym);
     }
-    ui->tableWidget_tape->item(0, headPos)->setText(newSym);
 
-    // 2. Движение
     if(p[1] == "R") headPos++; else if(p[1] == "L") headPos--;
 
-    // 3. Новое состояние
     currentState = p[2].mid(1).toInt();
-
     moveCarriage(headPos);
+}
+
+void TuringMachine::on_btn_start_clicked() {
+    currentState = 0;
+    ui->tableWidget_program->setEnabled(false); // Блокировка по ТЗ [cite: 39]
+    timer->start(speed);
 }
 
 void TuringMachine::on_btn_stop_clicked() {
     timer->stop();
     ui->tableWidget_program->setEnabled(true);
 }
+
+void TuringMachine::on_btn_speedUp_clicked() { speed = qMax(100, speed-200); if(timer->isActive()) timer->setInterval(speed); }
+void TuringMachine::on_btn_speedDown_clicked() { speed += 200; if(timer->isActive()) timer->setInterval(speed); }
+void TuringMachine::on_btn_addState_clicked() {
+    int r = ui->tableWidget_program->rowCount();
+    ui->tableWidget_program->insertRow(r);
+    ui->tableWidget_program->setVerticalHeaderItem(r, new QTableWidgetItem("q"+QString::number(r)));
+}
+void TuringMachine::on_btn_removeState_clicked() { if(ui->tableWidget_program->rowCount() > 1) ui->tableWidget_program->removeRow(ui->tableWidget_program->rowCount()-1); }
