@@ -32,9 +32,8 @@
         font-weight: bold;
     }
     QPushButton:hover { background-color: #3498db; }
-    QPushButton:pressed { background-color: #2471a3; }
     QPushButton#btn_stop { background-color: #c0392b; }
-    QPushButton#btn_reset { background-color: #7f8c8d; }
+    QPushButton#btn_stop:hover { background-color: #e74c3c; }
     QTableWidget {
         background-color: #1e1e1e;
         color: white;
@@ -43,105 +42,99 @@
     }
     QHeaderView::section {
         background-color: #2c3e50;
-        color: #3498db;
+        color: white;
         padding: 4px;
-        border: 1px solid #121212;
+        border: 1px solid #34495e;
     }
    </string>
   </property>
-  <widget class="QWidget" name="centralwidget">
+  <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout_main">
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
        <number>0</number>
       </property>
-      
       <widget class="QWidget" name="page_setup">
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <spacer name="verticalSpacer_3">
+         <spacer name="verticalSpacer_2">
           <property name="orientation"><enum>Qt::Vertical</enum></property>
          </spacer>
         </item>
         <item>
-         <widget class="QLabel" name="label_title">
+         <widget class="QLabel" name="lbl_title">
           <property name="text"><string>Настройка алфавитов</string></property>
-          <property name="alignment"><set>Qt::AlignCenter</set></property>
-          <property name="styleSheet"><string>font-size: 24px; color: #3498db;</string></property>
+          <property name="alignment"><enum>Qt::AlignCenter</enum></property>
+          <property name="styleSheet"><string>font-size: 24px; font-weight: bold; color: #3498db;</string></property>
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="label_base"><property name="text"><string>Основной алфавит:</string></property></widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="lineEdit_alphaBase"><property name="placeholderText"><string>Пример: abc</string></property></widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_extra"><property name="text"><string>Дополнительные символы:</string></property></widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="lineEdit_alphaExtra"><property name="placeholderText"><string>Пример: #XY</string></property></widget>
+         <layout class="QFormLayout" name="formLayout">
+          <item row="0" column="0"><widget class="QLabel" name="label"><property name="text"><string>Основной алфавит:</string></property></widget></item>
+          <item row="0" column="1"><widget class="QLineEdit" name="lineEdit_alphaBase"/></item>
+          <item row="1" column="0"><widget class="QLabel" name="label_2"><property name="text"><string>Доп. символы:</string></property></widget></item>
+          <item row="1" column="1"><widget class="QLineEdit" name="lineEdit_alphaExtra"/></item>
+         </layout>
         </item>
         <item>
          <widget class="QPushButton" name="btn_setAlphabets">
-          <property name="text"><string>ПЕРЕЙТИ К ПРОГРАММИРОВАНИЮ</string></property>
+          <property name="text"><string>Задать алфавиты и начать</string></property>
          </widget>
         </item>
         <item>
-         <spacer name="verticalSpacer_4">
+         <spacer name="verticalSpacer">
           <property name="orientation"><enum>Qt::Vertical</enum></property>
          </spacer>
         </item>
        </layout>
       </widget>
-
-      <widget class="QWidget" name="page_emulator">
+      <widget class="QWidget" name="page_emu">
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <layout class="QHBoxLayout" name="layout_tape_container">
-          <item>
-           <widget class="QTableWidget" name="tableWidget_tape_2">
-            <property name="minimumSize"><size><width>0</width><height>60</height></size></property>
-            <property name="maximumSize"><size><width>16777215</width><height>60</height></size></property>
-            <property name="verticalScrollBarPolicy"><enum>Qt::ScrollBarAlwaysOff</enum></property>
-            <property name="horizontalScrollBarPolicy"><enum>Qt::ScrollBarAlwaysOff</enum></property>
-           </widget>
-          </item>
-         </layout>
+         <widget class="QLabel" name="lbl_tape_title"><property name="text"><string>Лента (используйте Λ для пустых ячеек):</string></property></widget>
         </item>
         <item>
-         <widget class="QLabel" name="label_carriage">
-          <property name="text"><string>▲</string></property>
-          <property name="alignment"><set>Qt::AlignCenter</set></property>
-          <property name="styleSheet"><string>color: #e74c3c; font-size: 20px;</string></property>
+         <widget class="QTableWidget" name="tableWidget_tape_2">
+          <property name="minimumSize"><size><width>0</width><height>70</height></size></property>
+          <property name="maximumSize"><size><width>16777215</width><height>70</height></size></property>
+          <property name="verticalScrollBarPolicy"><enum>Qt::ScrollBarAlwaysOff</enum></property>
+          <property name="horizontalScrollBarPolicy"><enum>Qt::ScrollBarAlwaysOff</enum></property>
          </widget>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="layout_input">
-          <item><widget class="QLineEdit" name="lineEdit_inputWord"><property name="placeholderText"><string>Введите входное слово...</string></property></widget></item>
-          <item><widget class="QPushButton" name="btn_setString"><property name="text"><string>Задать строку</string></property></widget></item>
-         </layout>
+         <spacer name="verticalSpacer_3">
+          <property name="orientation"><enum>Qt::Vertical</enum></property>
+          <property name="sizeHint" stdset="0"><size><width>20</width><height>40</height></size></property>
+         </spacer>
         </item>
         <item>
-         <widget class="QTableWidget" name="tableWidget_program">
-          <property name="editTriggers"><enum>QAbstractItemView::AllEditTriggers</enum></property>
-         </widget>
+         <widget class="QLabel" name="lbl_prog_title"><property name="text"><string>Таблица переходов (Состояния x Алфавит):</string></property></widget>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="tableWidget_program"/>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="layout_word">
+          <item><widget class="QLabel" name="label_3"><property name="text"><string>Входное слово:</string></property></widget></item>
+          <item><widget class="QLineEdit" name="lineEdit_inputWord"/></item>
+          <item><widget class="QPushButton" name="btn_setString"><property name="text"><string>Загрузить на ленту</string></property></widget></item>
+         </layout>
         </item>
         <item>
          <layout class="QHBoxLayout" name="layout_controls">
           <item><widget class="QPushButton" name="btn_start"><property name="text"><string>▶ ПУСК</string></property></widget></item>
-          <item><widget class="QPushButton" name="btn_step"><property name="text"><string>⏭ ШАГ</string></property></widget></item>
+          <item><widget class="QPushButton" name="btn_step"><property name="text"><string>Step</string></property></widget></item>
           <item><widget class="QPushButton" name="btn_stop"><property name="text"><string>◼ СТОП</string></property></widget></item>
           <item><widget class="QPushButton" name="btn_reset"><property name="text"><string>↺ СБРОС</string></property></widget></item>
          </layout>
         </item>
         <item>
          <layout class="QHBoxLayout" name="layout_speed">
-          <item><widget class="QLabel" name="lbl_speed"><property name="text"><string>Скорость:</string></property></widget></item>
+          <item><widget class="QLabel" name="lbl_speed_text"><property name="text"><string>Скорость:</string></property></widget></item>
           <item><widget class="QPushButton" name="btn_speedDown"><property name="text"><string>-</string></property></widget></item>
           <item><widget class="QPushButton" name="btn_speedUp"><property name="text"><string>+</string></property></widget></item>
-          <item><spacer name="horizontalSpacer"><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
+          <item><spacer name="hSpacer"><property name="orientation"><enum>Qt::Horizontal</enum></property></spacer></item>
           <item><widget class="QPushButton" name="btn_addState"><property name="text"><string>+ Состояние</string></property></widget></item>
           <item><widget class="QPushButton" name="btn_removeState"><property name="text"><string>- Состояние</string></property></widget></item>
           <item><widget class="QPushButton" name="btn_setAlphabets_back"><property name="text"><string>Изменить алфавиты</string></property></widget></item>
