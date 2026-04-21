@@ -4,7 +4,7 @@
 #include <QMainWindow>
 #include <QTimer>
 #include <QPropertyAnimation>
-#include <QString>
+#include <QTableWidgetItem>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -22,10 +22,13 @@ private slots:
     void on_btn_setString_clicked();
     void on_btn_start_clicked();
     void on_btn_stop_clicked();
+    void on_btn_reset_clicked();      // Кнопка Сброс
+    void on_btn_step_clicked();       // Кнопка Шаг
     void on_btn_speedUp_clicked();
     void on_btn_speedDown_clicked();
     void on_btn_addState_clicked();
     void on_btn_removeState_clicked();
+    void on_btn_setAlphabets_back_clicked();
     void machineStep();
 
 private:
@@ -33,7 +36,6 @@ private:
     QTimer *timer;
     QPropertyAnimation *anim;
 
-    // Те самые переменные, которых не хватало:
     QString baseAlphabet;
     QString extraAlphabet;
     int currentState;
@@ -41,5 +43,6 @@ private:
     int speed;
 
     void moveCarriage(int pos);
+    void setControlsEnabled(bool enabled); // Блокировка интерфейса по ТЗ
 };
 #endif
