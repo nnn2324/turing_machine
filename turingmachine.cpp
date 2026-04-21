@@ -208,6 +208,16 @@ void TuringMachine::on_btn_setAlphabets_clicked() {
 void TuringMachine::on_btn_setString_clicked() {
     QString word = ui->lineEdit_inputWord->text().trimmed();
 
+    if (!word.isEmpty()) {
+        for (int i = 0; i < word.length(); i++) {
+            if (!baseAlphabet.contains(word[i])) {
+                QMessageBox::critical(this, "Ошибка алфавита",
+                                      QString("Символ '%1' не входит в разрешенный алфавит!").arg(word[i]));
+                return; // Прекращаем выполнение, на ленту ничего не попадёт
+            }
+        }
+    }
+
     // Чистим ленту
     for(int i = 0; i < ui->tableWidget_tape_2->columnCount(); i++)
         ui->tableWidget_tape_2->item(0, i)->setText("Λ");
@@ -224,6 +234,23 @@ void TuringMachine::on_btn_setString_clicked() {
 }
 
 void TuringMachine::on_btn_start_clicked() {
+    bool hasStopCommand = false;
+    for (int r = 0; r < ui->tableWidget_program->rowCount(); ++r) {
+        for (int c = 0; c < ui->tableWidget_program->columnCount(); ++c) {
+            QTableWidgetItem *item = ui->tableWidget_program->item(r, c);
+            if (item && item->text().contains("!")) {
+                hasStopCommand = true;
+                break;
+            }
+        }
+        if (hasStopCommand) break;
+    }
+
+    if (!hasStopCommand) {
+        QMessageBox::warning(this, "Ошибка запуска",
+                             "В таблице программы отсутствует символ остановки (!).\nМашина не будет запущена.");
+        return; // Не запускаем таймер
+    }
     setControlsEnabled(false);
     timer->start(speed);
 }
