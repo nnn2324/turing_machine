@@ -5,12 +5,61 @@
 
 TuringMachine::TuringMachine(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
+
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &TuringMachine::machineStep);
-
     anim = new QPropertyAnimation(this);
     speed = 800;
-    ui->stackedWidget->setCurrentIndex(0);
+
+    // --- ОБЩИЙ СТИЛЬ ДЛЯ ТЕКСТА (ФРАЗЫ И ПОДПИСИ) ---
+    // Устанавливаем размер 18px и черный цвет для всех QLabel
+    QString labelStyle = "QLabel { "
+                         "  font-size: 16px; "
+                         "  font-weight: bold; "
+                         "  color: black; "
+                         "}";
+
+    // Применяем стиль ко всему окну, чтобы все фразы стали большими
+    this->setStyleSheet(labelStyle);
+
+    // --- СТИЛЬ ДЛЯ ПОЛЕЙ ВВОДА (ЧТОБЫ БЫЛО ВИДНО АЛФАВИТ) ---
+    QString inputStyle = "QLineEdit { "
+                         "  font-size: 16px; "
+                         "  color: black; "
+                         "  background-color: white; "
+                         "  border: 2px solid #3498db; "
+                         "  border-radius: 5px; "
+                         "  padding: 5px; "
+                         "}";
+
+    ui->lineEdit_alphaBase->setStyleSheet(inputStyle);
+    ui->lineEdit_alphaExtra->setStyleSheet(inputStyle);
+    ui->lineEdit_inputWord->setStyleSheet(inputStyle);
+
+    // --- СТИЛЬ ДЛЯ ЛЕНТЫ (ЯРКАЯ СЕТКА) ---
+    QString tapeStyle = "QTableWidget { "
+                        "  gridline-color: black; "
+                        "  background-color: white; "
+                        "  color: black; "
+                        "  font-size: 16px; "
+                        "  font-weight: bold; "
+                        "  border: 2px solid black; "
+                        "} "
+                        "QHeaderView::section { color: black; font-weight: bold; border: 1px solid black; }";
+
+    ui->tableWidget_tape_2->setStyleSheet(tapeStyle);
+    ui->tableWidget_program->setStyleSheet(tapeStyle);
+
+    // В конструктор turingmachine.cpp
+    ui->tableWidget_tape_2->setStyleSheet("QTableWidget { gridline-color: black; font-size: 22px; color: black; border: 2px solid black; }");
+    ui->tableWidget_tape_2->setFixedHeight(80); // Делаем ленту ощутимо выше
+    ui->tableWidget_tape_2->verticalHeader()->setDefaultSectionSize(65);
+    ui->tableWidget_tape_2->horizontalHeader()->setDefaultSectionSize(60);
+
+    ui->label->setStyleSheet("font-size: 16px; font-weight: bold; color: white;");
+    ui->label_2->setStyleSheet("font-size: 16px; font-weight: bold; color: white;");
+
+    if (ui->stackedWidget) ui->stackedWidget->setCurrentIndex(0);
 }
 
 TuringMachine::~TuringMachine() { delete ui; }

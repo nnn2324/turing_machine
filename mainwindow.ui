@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QStackedWidget" name="tableWidget_tape">
+   <widget class="QStackedWidget" name="stackedWidget">
     <property name="geometry">
      <rect>
       <x>30</x>
@@ -54,9 +54,9 @@ QPushButton#btn_setAlphabets:hover {
       <property name="geometry">
        <rect>
         <x>332</x>
-        <y>80</y>
+        <y>75</y>
         <width>201</width>
-        <height>26</height>
+        <height>31</height>
        </rect>
       </property>
      </widget>
@@ -66,16 +66,16 @@ QPushButton#btn_setAlphabets:hover {
         <x>332</x>
         <y>130</y>
         <width>201</width>
-        <height>26</height>
+        <height>31</height>
        </rect>
       </property>
      </widget>
      <widget class="QPushButton" name="btn_setAlphabets">
       <property name="geometry">
        <rect>
-        <x>230</x>
+        <x>210</x>
         <y>210</y>
-        <width>171</width>
+        <width>201</width>
         <height>41</height>
        </rect>
       </property>
@@ -83,30 +83,30 @@ QPushButton#btn_setAlphabets:hover {
        <string>Задать алфавиты</string>
       </property>
      </widget>
-     <widget class="QPlainTextEdit" name="plainTextEdit">
+     <widget class="QLabel" name="label">
       <property name="geometry">
        <rect>
         <x>160</x>
         <y>80</y>
-        <width>141</width>
-        <height>31</height>
+        <width>151</width>
+        <height>18</height>
        </rect>
       </property>
-      <property name="plainText">
+      <property name="text">
        <string>Алфавит строки</string>
       </property>
      </widget>
-     <widget class="QPlainTextEdit" name="plainTextEdit_2">
+     <widget class="QLabel" name="label_2">
       <property name="geometry">
        <rect>
         <x>160</x>
         <y>130</y>
-        <width>141</width>
-        <height>31</height>
+        <width>131</width>
+        <height>21</height>
        </rect>
       </property>
-      <property name="plainText">
-       <string>Доп. символы</string>
+      <property name="text">
+       <string>Спец. символы</string>
       </property>
      </widget>
     </widget>
