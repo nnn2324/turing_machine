@@ -44,7 +44,7 @@ TuringMachine::TuringMachine(QWidget *parent) : QMainWindow(parent), ui(new Ui::
     ui->stackedWidget->setCurrentIndex(0); // Начинаем с экрана ввода алфавита
 }
 
-// ДЕСТРУКТОР (обязателен для исправления ошибки undefined reference)
+// ДЕСТРУКТОР
 TuringMachine::~TuringMachine() {
     delete ui;
 }
