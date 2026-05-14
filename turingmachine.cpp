@@ -32,6 +32,10 @@ TuringMachine::TuringMachine(QWidget *parent) : QMainWindow(parent), ui(new Ui::
     ui->tableWidget_tape_2->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // Скрываем полосу прокрутки
     ui->tableWidget_tape_2->setSelectionMode(QAbstractItemView::NoSelection);
 
+    // Настройка таблицы программы: по умолчанию можно выделять только одну ячейку
+    ui->tableWidget_program->setSelectionBehavior(QAbstractItemView::SelectItems);
+    ui->tableWidget_program->setSelectionMode(QAbstractItemView::SingleSelection);
+
     // Заполняем ленту начальными 100 ячейками с символом пустоты Λ
     for(int i = 0; i < 100; i++) {
         ui->tableWidget_tape_2->insertColumn(i);
@@ -51,7 +55,17 @@ TuringMachine::~TuringMachine() {
 
 // Блокировка/разблокировка интерфейса при работе машины
 void TuringMachine::setControlsEnabled(bool enabled) {
-    ui->tableWidget_program->setEnabled(enabled);
+    if (enabled) {
+        // Режим редактирования: разрешаем ввод, выделяем по одной ячейке
+        ui->tableWidget_program->setEditTriggers(QAbstractItemView::AllEditTriggers);
+        ui->tableWidget_program->setSelectionBehavior(QAbstractItemView::SelectItems);
+        ui->tableWidget_program->clearSelection();
+    } else {
+        // Режим работы: блокируем ввод, но оставляем таблицу яркой и выделяем всю строку
+        ui->tableWidget_program->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        ui->tableWidget_program->setSelectionBehavior(QAbstractItemView::SelectRows);
+    }
+
     ui->lineEdit_inputWord->setEnabled(enabled);
     ui->btn_setString->setEnabled(enabled);
     ui->btn_addState->setEnabled(enabled);
@@ -133,25 +147,30 @@ void TuringMachine::machineStep() {
         return;
     }
 
-    // 4. ПАРСИНГ (поддержка: a.R.q1, a.R, R.q1, R)
-    QStringList parts = cmdText.split(".");
+    // 4. ПАРСИНГ через запятую с очисткой пробелов (поддержка: a, R, q1 | a, R | R, q1 | R)
+    QStringList rawParts = cmdText.split(",");
+    QStringList parts;
+    for(const QString& p : rawParts) {
+        parts.append(p.trimmed()); // Убираем любые лишние пробелы вокруг
+    }
+
     QString writeSym = sym;
-    QString dir = "";
+    QString dir = "N"; // По умолчанию остаемся на месте, если не указано иное
     int nextState = currentState;
 
-    if (parts.size() == 3) { // a.R.q1
+    if (parts.size() >= 3) { // a, R, q1
         writeSym = parts[0];
         dir = parts[1].toUpper();
         nextState = parts[2].mid(1).toInt();
     } else if (parts.size() == 2) {
-        if (parts[1].startsWith("q")) { // R.q1
+        if (parts[1].startsWith("q")) { // R, q1
             dir = parts[0].toUpper();
             nextState = parts[1].mid(1).toInt();
-        } else { // a.R
+        } else { // a, R
             writeSym = parts[0];
             dir = parts[1].toUpper();
         }
-    } else { // R или L
+    } else if (parts.size() == 1) { // R или L
         dir = parts[0].toUpper();
     }
 
@@ -175,7 +194,7 @@ void TuringMachine::machineStep() {
         ui->tableWidget_tape_2->item(0, newCol)->setTextAlignment(Qt::AlignCenter);
     }
 
-    // Переходим в новое состояние
+    // Переходим в новое состояние и подсвечиваем его
     currentState = nextState;
     ui->tableWidget_program->selectRow(currentState);
 
@@ -190,7 +209,16 @@ void TuringMachine::on_btn_setAlphabets_clicked() {
     QString extra = ui->lineEdit_alphaExtra->text().trimmed();
     if(baseAlphabet.isEmpty()) return;
 
-    QString full = baseAlphabet + extra + "Λ";
+    // Убираем дубликаты символов (работает как Set)
+    QString rawFull = baseAlphabet + extra;
+    QString uniqueFull = "";
+    for(QChar c : rawFull) {
+        if(!uniqueFull.contains(c)) {
+            uniqueFull.append(c);
+        }
+    }
+
+    QString full = uniqueFull + "Λ";
     ui->tableWidget_program->setColumnCount(full.length());
 
     QStringList labels;
@@ -212,7 +240,7 @@ void TuringMachine::on_btn_setString_clicked() {
         for (int i = 0; i < word.length(); i++) {
             if (!baseAlphabet.contains(word[i])) {
                 QMessageBox::critical(this, "Ошибка алфавита",
-                                      QString("Символ '%1' не входит в разрешенный алфавит!").arg(word[i]));
+                                      QString("Символ '%1' не входит в разрешенный основной алфавит!").arg(word[i]));
                 return; // Прекращаем выполнение, на ленту ничего не попадёт
             }
         }
@@ -230,27 +258,74 @@ void TuringMachine::on_btn_setString_clicked() {
     headPos = 10;
     currentState = 0;
     moveCarriage(headPos);
-    ui->tableWidget_program->selectRow(0);
+
+    // Сбрасываем выделение перед началом
+    ui->tableWidget_program->clearSelection();
 }
 
 void TuringMachine::on_btn_start_clicked() {
+    // Собираем весь текущий алфавит из шапки для валидации
+    QString fullAlpha = "";
+    for(int i = 0; i < ui->tableWidget_program->columnCount(); i++) {
+        fullAlpha += ui->tableWidget_program->horizontalHeaderItem(i)->text();
+    }
+
     bool hasStopCommand = false;
+
+    // ВАЛИДАЦИЯ КОМАНД В ТАБЛИЦЕ
     for (int r = 0; r < ui->tableWidget_program->rowCount(); ++r) {
         for (int c = 0; c < ui->tableWidget_program->columnCount(); ++c) {
             QTableWidgetItem *item = ui->tableWidget_program->item(r, c);
-            if (item && item->text().contains("!")) {
-                hasStopCommand = true;
-                break;
+            if (item && !item->text().trimmed().isEmpty()) {
+                QString txt = item->text().trimmed();
+
+                if (txt.contains("!")) {
+                    hasStopCommand = true;
+                    continue; // Пропускаем проверку для команды остановки
+                }
+
+                QStringList rawParts = txt.split(",");
+                QStringList parts;
+                for(const QString& p : rawParts) parts.append(p.trimmed());
+
+                QString testSym = "";
+                QString testDir = "";
+                QString testState = "";
+
+                if (parts.size() >= 3) {
+                    testSym = parts[0]; testDir = parts[1].toUpper(); testState = parts[2];
+                } else if (parts.size() == 2) {
+                    if (parts[1].startsWith("q")) { testDir = parts[0].toUpper(); testState = parts[1]; }
+                    else { testSym = parts[0]; testDir = parts[1].toUpper(); }
+                } else if (parts.size() == 1) {
+                    testDir = parts[0].toUpper();
+                }
+
+                // Проверка символа на наличие в алфавите
+                if (!testSym.isEmpty() && !fullAlpha.contains(testSym)) {
+                    QMessageBox::critical(this, "Ошибка", QString("Символ '%1' в состоянии q%2 не существует в алфавите!").arg(testSym).arg(r));
+                    return;
+                }
+                // Проверка направления
+                if (testDir != "R" && testDir != "L" && testDir != "N" && !testDir.isEmpty()) {
+                    QMessageBox::critical(this, "Ошибка", QString("Неверное направление '%1' в состоянии q%2! (Используйте R, L или N)").arg(testDir).arg(r));
+                    return;
+                }
+                // Проверка состояния
+                if (!testState.isEmpty() && (!testState.startsWith("q") || testState.mid(1).toInt() >= ui->tableWidget_program->rowCount())) {
+                    QMessageBox::critical(this, "Ошибка", QString("Неверное состояние '%1' в q%2 (состояние не существует)!").arg(testState).arg(r));
+                    return;
+                }
             }
         }
-        if (hasStopCommand) break;
     }
 
     if (!hasStopCommand) {
         QMessageBox::warning(this, "Ошибка запуска",
-                             "В таблице программы отсутствует символ остановки (!).\nМашина не будет запущена.");
+                             "В таблице программы отсутствует команда остановки (!).\nМашина не будет запущена.");
         return; // Не запускаем таймер
     }
+
     setControlsEnabled(false);
     timer->start(speed);
 }
